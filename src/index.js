@@ -1,7 +1,5 @@
 require('../index.html');
 import { getColorFromNumber } from "./utils";
-
-
 import { randomIntFromRange } from "./utils";
 import { Res } from "./res";
 
@@ -16,6 +14,10 @@ let cameraOffset = {
     y: window.innerHeight/2 
 }
 
+let nGold = 0;
+let nFood = 0;
+let nWater = 0;
+
 let cameraZoom = 1;
 let MAX_ZOOM = 5;
 let MIN_ZOOM = 0.1;
@@ -23,19 +25,22 @@ let SCROLL_SENSITIVITY = 0.0005;
 let fieldX = 30;
 let fieldY = 30;
 let allRes = [];
+let curResId;
 
+setTimeout(tacts,1000);
 
+for (let iy = 0; iy < fieldY; iy = iy +2){
+    for ( let ix = 0; ix < fieldX; ix = ix +2) {
 
-for (let ix = 0; ix < fieldY; ix ++){
-    for ( let iy = 0; iy < fieldX; iy ++) {
-      let id = ix*fieldX + iy;
-      addRes(nodeSize * ix,  nodeSize * iy, id, randomIntFromRange(1,5));
+      let rIFR = randomIntFromRange(1,5);
+
+      addRes(nodeSize * ix          ,  nodeSize * iy            , iy*fieldX         + ix         , rIFR);
+      addRes(nodeSize * ix          ,  nodeSize * (iy + 1)      , iy*fieldX         + ix +1      , rIFR);
+      addRes(nodeSize * (ix + 1)    ,  nodeSize * iy            , (iy + 1) *fieldX  + ix         , rIFR);
+      addRes(nodeSize * (ix + 1)    ,  nodeSize * (iy + 1)      , (iy + 1) *fieldX  + ix +1      , rIFR);
+
     }
 }
-
-
-
-
 
 function render()
 {
@@ -46,11 +51,9 @@ function render()
     ctx.scale(cameraZoom, cameraZoom)
     ctx.translate(cameraOffset.x, cameraOffset.y)
     //ctx.clearRect(0,0, window.innerWidth, window.innerHeight)
-    
-
-	
-	for (let ix = 0; ix < fieldY; ix ++){
-		for (let iy = 0; iy < fieldX; iy ++) {
+    	
+	for (let iy = 0; iy < fieldY; iy ++){
+		for (let ix = 0; ix < fieldX; ix ++) {
         let id = iy*fieldX + ix;
 
 
@@ -59,11 +62,13 @@ function render()
         } else{
             ctx.fillStyle = getColorFromNumber(allRes[id].type);
         }
+           
         
-	    
+        drawRect(nodeSize * ix, nodeSize * iy, nodeSize + 2, nodeSize + 2);
+
+        ctx.fillStyle = "black";
+        drawCircle(nodeSize * ix, nodeSize * iy, allRes[id].level * 10, allRes[id].level * 10);
         
-        drawRect(nodeSize * ix, nodeSize * iy,100,100);
-        drawCircle(nodeSize * ix, nodeSize * iy,10,10);
 
 		}
 	}
@@ -148,14 +153,30 @@ function onPointerDown(e)
     nodeCoordinate.x = Math.floor(nodeCoordinate.x / nodeSize);
     nodeCoordinate.y = Math.floor(nodeCoordinate.y / nodeSize);
     
-    let resId = nodeCoordinate.y * fieldX + nodeCoordinate.x;
+    curResId = nodeCoordinate.y * fieldX + nodeCoordinate.x;
 
-    console.log(resId, nodeCoordinate,  allRes[resId].color);
+    console.log(curResId, nodeCoordinate,  allRes[curResId].color);
 
     let htmlRes = document.getElementById("resItem");
-    htmlRes.innerHTML = allRes[resId].color;
+    let villageName = document.getElementById("village");
+    villageName.innerHTML = curResId + "/" + allRes[curResId].level;
+
+
+    if (allRes[curResId].open == true) {
+        htmlRes.innerHTML = allRes[curResId].color;
+    }else{
+        htmlRes.innerHTML = "hidden";
+    }
+}
+
+
+
+function buildUp() {
+    allRes[curResId].level++;
 
 }
+
+
 
 function onPointerUp(e)
 {
@@ -237,13 +258,24 @@ canvas.addEventListener('touchend',  (e) => handleTouch(e, onPointerUp))
 canvas.addEventListener('mousemove', onPointerMove)
 canvas.addEventListener('touchmove', (e) => handleTouch(e, onPointerMove))
 canvas.addEventListener( 'wheel', (e) => adjustZoom(e.deltaY*SCROLL_SENSITIVITY))
+document.getElementById("btnBuildUp").addEventListener("click", buildUp);
 
 // Ready, set, go
 render()
 
 function addRes(posX, posY, newId, t)
 {
-  // Add resource
-  let r = new Res(posY * fieldX + posX, posX, posY, t, 1000);
-  allRes.push(r);
+    let nodePosX = posX / nodeSize;
+    let nodePosY = posY / nodeSize;
+
+    // Add resource
+    let r = new Res(newId, posX, posY, t, 1000);
+    allRes[newId] = r;
+}
+
+function tacts()
+{
+   console.log("HALLLO");
+   // Gehe alle Siedlungen durch
+   setTimeout(tacts, 1000);
 }

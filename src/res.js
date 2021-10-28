@@ -2,7 +2,7 @@ import { getColorFromNumber } from "./utils";
 
 export class Res {
 
-    constructor(resId, x, y, t, a) {
+    constructor(resId, x, y, t = 0, a = 1000) {
         this.posx = x
         this.posy = y;
         this.type = t;
@@ -13,18 +13,9 @@ export class Res {
         this.id = resId;
         this.color = getColorFromNumber(t);
         this.open = true;
+        this.level = 0;
     }
-  
-    // Simple class instance methods using short-hand method
-    // declaration
-    sayName() {
-        console.log('Hi , I m a ', this.name + '.');
-    }
-  
-    sayHistory() {
-        console.log('"Polyg on" is der ived from the Greek polus (many) ' +
-        'and gonia (angle).');
-    }
+
     // We will look at static and subclassed methods shortly
 }
 
