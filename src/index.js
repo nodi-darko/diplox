@@ -67,7 +67,10 @@ function render()
         drawRect(nodeSize * ix, nodeSize * iy, nodeSize + 2, nodeSize + 2);
 
         ctx.fillStyle = "black";
-        drawCircle(nodeSize * ix, nodeSize * iy, allRes[id].level * 10, allRes[id].level * 10);
+        drawCircle(nodeSize * ix, nodeSize * iy, allRes[id].level * 10);
+
+        ctx.setLineDash([4, 4]);
+        drawCircle(nodeSize * ix, nodeSize * iy, 20, 0, 1);
         
 
 		}
@@ -149,17 +152,25 @@ function onPointerDown(e)
 
 
     let worldCordinate = {x: dragStart.x, y: dragStart.y};
-    let nodeCoordinate = worldCordinate;
-    nodeCoordinate.x = Math.floor(nodeCoordinate.x / nodeSize);
-    nodeCoordinate.y = Math.floor(nodeCoordinate.y / nodeSize);
+    let gridCoordinate = {x: worldCordinate.x, y: worldCordinate.y};
+    gridCoordinate.x = Math.floor(gridCoordinate.x / nodeSize);
+    gridCoordinate.y = Math.floor(gridCoordinate.y / nodeSize);
     
-    curResId = nodeCoordinate.y * fieldX + nodeCoordinate.x;
+    curResId = gridCoordinate.y * fieldX + gridCoordinate.x;
 
-    console.log(curResId, nodeCoordinate,  allRes[curResId].color);
+    let nodeCoordinate = {x: worldCordinate.x, y: worldCordinate.y};
+    nodeCoordinate.x = gridCoordinate.x * nodeSize;
+    nodeCoordinate.y = gridCoordinate.y * nodeSize;
+
+    let distanceToCorner = Math.hypot(worldCordinate.x - nodeCoordinate.x, worldCordinate.y - nodeCoordinate.y);
+    //curNodeId = 
+
+
+    console.log(curResId, gridCoordinate,  allRes[curResId].color, distanceToCorner);
 
     let htmlRes = document.getElementById("resItem");
     let villageName = document.getElementById("village");
-    villageName.innerHTML = curResId + "/" + allRes[curResId].level;
+    villageName.innerHTML = "Resourcen Id: " + curResId + "<br>" + "Siedlungslevel: " + allRes[curResId].level;
 
 
     if (allRes[curResId].open == true) {
