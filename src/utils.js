@@ -5,8 +5,8 @@ function getColorFromNumber(n)
   if(n == 0) return "Grey";   // Nicht gedeckt
   if(n == 1) return "Gold";   // Gold/Entropie
   if(n == 2) return "Indianred";  // Futter
-  if(n == 3) return "Limegreen"; // Raum
-  if(n == 4) return "Dodgerblue";  // Wasser
+  if(n == 3) return "Dodgerblue"; // Wasser
+  if(n == 4) return "Limegreen";  // Land
   if(n == 5) return "SandyBrown";  // Wasser
 }
 

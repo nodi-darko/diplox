@@ -14,9 +14,6 @@ let cameraOffset = {
     y: window.innerHeight/2 
 }
 
-let nGold = 0;
-let nFood = 0;
-let nWater = 0;
 
 let cameraZoom = 1;
 let MAX_ZOOM = 5;
@@ -26,6 +23,7 @@ let fieldX = 30;
 let fieldY = 30;
 let allRes = [];
 let curResId;
+let Bank = [0, 100, 100, 100, 100];
 
 setTimeout(tacts,1000);
 
@@ -54,27 +52,28 @@ function render()
     	
 	for (let iy = 0; iy < fieldY; iy ++){
 		for (let ix = 0; ix < fieldX; ix ++) {
-        let id = iy*fieldX + ix;
+            let id = iy*fieldX + ix;
 
 
-        if (allRes[id].open == false){
-            ctx.fillStyle =  "grey";
-        } else{
-            ctx.fillStyle = getColorFromNumber(allRes[id].type);
-        }
-           
-        
-        drawRect(nodeSize * ix, nodeSize * iy, nodeSize + 2, nodeSize + 2);
+            if (allRes[id].open == false){
+                ctx.fillStyle =  "grey";
+            } else{
+                ctx.fillStyle = getColorFromNumber(allRes[id].type);
+            }
+            
+            
+            drawRect(nodeSize * ix, nodeSize * iy, nodeSize + 2, nodeSize + 2);
 
-        ctx.fillStyle = "black";
-        drawCircle(nodeSize * ix, nodeSize * iy, allRes[id].level * 10);
+            ctx.fillStyle = "black";
+            ctx.setLineDash([]);
+            drawCircle(nodeSize * ix, nodeSize * iy, allRes[id].level * 10, 1, 1);
 
-        ctx.setLineDash([4, 4]);
-        drawCircle(nodeSize * ix, nodeSize * iy, 20, 0, 1);
-        
-
+            ctx.setLineDash([4, 4]);
+            drawCircle(nodeSize * ix, nodeSize * iy, 40, 0, 1);
 		}
 	}
+
+
 
 
 	/*
@@ -177,7 +176,7 @@ function onPointerDown(e)
         htmlRes.innerHTML = allRes[curResId].color;
     }else{
         htmlRes.innerHTML = "hidden";
-    }
+    } 
 }
 
 
@@ -287,6 +286,19 @@ function addRes(posX, posY, newId, t)
 function tacts()
 {
    console.log("HALLLO");
+   
+	for (let iy = 0; iy < fieldY; iy ++){
+		for (let ix = 0; ix < fieldX; ix ++) {
+            let id = iy*fieldX + ix;
+            let currentLevel = allRes[id].level
+            let currentType = allRes[id].type;
+            Bank[currentType] += currentLevel;
+        }
+    }
+   document.getElementById("btnGold").innerHTML = "Gold (" + Bank[1] + ")";
+   document.getElementById("btnFutter").innerHTML = "Futter (" + Bank[2] + ")";
+   document.getElementById("btnWasser").innerHTML = "Wasser (" + Bank[3] + ")";
+   document.getElementById("btnLand").innerHTML = "Land (" + Bank[4] + ")";
    // Gehe alle Siedlungen durch
    setTimeout(tacts, 1000);
 }
