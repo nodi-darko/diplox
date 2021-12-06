@@ -10,12 +10,17 @@ let ctx = canvas.getContext('2d')
 let nodeSize = 128;
 
 let cameraOffset = { 
-    x: window.innerWidth/2, 
-    y: window.innerHeight/2 
+    x: window.innerWidth, 
+    y: window.innerHeight * 0.8
+}
+
+let mousePos = { 
+    x: 0,
+    y: 0
 }
 
 
-let cameraZoom = 1;
+let cameraZoom = 0.2;
 let MAX_ZOOM = 5;
 let MIN_ZOOM = 0.1;
 let SCROLL_SENSITIVITY = 0.0005;
@@ -165,7 +170,7 @@ function onPointerDown(e)
     //curNodeId = 
 
 
-    console.log(curResId, gridCoordinate,  allRes[curResId].color, distanceToCorner);
+    console.log(curResId, gridCoordinate,  allRes[curResId].color, worldCordinate.x);
 
     let htmlRes = document.getElementById("resItem");
     let villageName = document.getElementById("village");
@@ -202,6 +207,9 @@ function onPointerMove(e)
         cameraOffset.x = getEventLocation(e).x/cameraZoom - dragStart.x
         cameraOffset.y = getEventLocation(e).y/cameraZoom - dragStart.y
     }
+    mousePos.x =  getEventLocation(e).x;
+    mousePos.y =  getEventLocation(e).y;
+
 }
 
 function handleTouch(e, singleTouchHandler)
@@ -246,6 +254,7 @@ function adjustZoom(zoomAmount, zoomFactor)
     {
         if (zoomAmount)
         {
+            console.log(cameraZoom, zoomAmount)
             cameraZoom -= zoomAmount
         }
         else if (zoomFactor)
@@ -256,8 +265,11 @@ function adjustZoom(zoomAmount, zoomFactor)
         
         cameraZoom = Math.min( cameraZoom, MAX_ZOOM )
         cameraZoom = Math.max( cameraZoom, MIN_ZOOM )
+
+        cameraOffset.x += (mousePos.x / cameraZoom) - (mousePos.x / (cameraZoom + zoomAmount));
+        cameraOffset.y += (mousePos.y / cameraZoom) - (mousePos.y / (cameraZoom + zoomAmount));
         
-        console.log(zoomAmount)
+        console.log(a,b)
     }
 }
 
@@ -285,7 +297,7 @@ function addRes(posX, posY, newId, t)
 
 function tacts()
 {
-   console.log("HALLLO");
+   //console.log("HALLLO");
    
 	for (let iy = 0; iy < fieldY; iy ++){
 		for (let ix = 0; ix < fieldX; ix ++) {
