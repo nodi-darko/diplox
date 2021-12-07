@@ -9,16 +9,8 @@ let canvas = document.getElementById("canvas")
 let ctx = canvas.getContext('2d')
 let nodeSize = 128;
 
-let cameraOffset = { 
-    x: window.innerWidth, 
-    y: window.innerHeight * 0.8
-}
-
-let mousePos = { 
-    x: 0,
-    y: 0
-}
-
+let cameraOffset = { x: window.innerWidth,  y: window.innerHeight * 0.8 }
+let mousePos = {x: 0, y: 0}
 
 let cameraZoom = 0.2;
 let MAX_ZOOM = 5;
@@ -27,7 +19,8 @@ let SCROLL_SENSITIVITY = 0.0005;
 let fieldX = 30;
 let fieldY = 30;
 let allRes = [];
-let curResId;
+let selectedResId;
+let curResPos = {x:0, y:0};
 let Bank = [0, 100, 100, 100, 100];
 
 setTimeout(tacts,1000);
@@ -77,33 +70,9 @@ function render()
             drawCircle(nodeSize * ix, nodeSize * iy, 40, 0, 1);
 		}
 	}
+    drawCircle(curResPos.x * nodeSize, curResPos.y * nodeSize, 20, 0, 1);
 
-
-
-
-	/*
-    ctx.fillStyle = "#991111"
-    drawRect(-50,-50,100,100)
-    
-    ctx.fillStyle = "#eecc77"
-    drawRect(-35,-35,20,20)
-    drawRect(15,-35,20,20)
-    drawRect(-35,15,70,20)
-    
-    ctx.fillStyle = "#fff"
-    drawText("Simple Pan and Zoom Canvas", -255, -100, 32, "courier")
-    
-    ctx.rotate(-31*Math.PI / 180)
-    ctx.fillStyle = `#${(Math.round(Date.now()/40)%4096).toString(16)}`
-    drawText("Now with touch!", -110, 100, 32, "courier")
-    
-    ctx.fillStyle = "#fff"
-    ctx.rotate(31*Math.PI / 180)
-    
-    drawText("Wow, you found me!", -260, -2000, 48, "courier")
-    */
     requestAnimationFrame( render )
-	
 }
 
 function drawCircle(x, y, radius, fill, stroke, strokeWidth) {
@@ -147,38 +116,49 @@ function drawText(text, x, y, size, font)
 let isDragging = false
 let dragStart = { x: 0, y: 0 }
 
+function screenToWorld(p) {
+    return {x: p.x/cameraZoom - cameraOffset.x, y: p.y/cameraZoom - cameraOffset.y};
+}
+
+function worldToGrid(p) {
+    return {x: Math.floor(p.x / nodeSize), y: Math.floor(p.y / nodeSize)};
+}
+
+function gridToId(p) {
+    return p.y * fieldX + p.x;
+}
+
+function idToGrid(id) {
+    let xp =  Math.floor(id / fieldX);
+    return {x: xp, y: id - xp * fieldX};
+}
+
 function onPointerDown(e)
 {
     isDragging = true
-    dragStart.x = getEventLocation(e).x/cameraZoom - cameraOffset.x
-    dragStart.y = getEventLocation(e).y/cameraZoom - cameraOffset.y
-
-
+    dragStart = screenToWorld(getEventLocation(e));
 
     let worldCordinate = {x: dragStart.x, y: dragStart.y};
     let gridCoordinate = {x: worldCordinate.x, y: worldCordinate.y};
-    gridCoordinate.x = Math.floor(gridCoordinate.x / nodeSize);
-    gridCoordinate.y = Math.floor(gridCoordinate.y / nodeSize);
+    gridCoordinate = worldToGrid(gridCoordinate);
     
-    curResId = gridCoordinate.y * fieldX + gridCoordinate.x;
+    selectedResId = gridToId(gridCoordinate);
 
     let nodeCoordinate = {x: worldCordinate.x, y: worldCordinate.y};
     nodeCoordinate.x = gridCoordinate.x * nodeSize;
     nodeCoordinate.y = gridCoordinate.y * nodeSize;
 
     let distanceToCorner = Math.hypot(worldCordinate.x - nodeCoordinate.x, worldCordinate.y - nodeCoordinate.y);
-    //curNodeId = 
 
-
-    console.log(curResId, gridCoordinate,  allRes[curResId].color, worldCordinate.x);
+    console.log(selectedResId, gridCoordinate,  allRes[selectedResId].color, worldCordinate.x);
 
     let htmlRes = document.getElementById("resItem");
     let villageName = document.getElementById("village");
-    villageName.innerHTML = "Resourcen Id: " + curResId + "<br>" + "Siedlungslevel: " + allRes[curResId].level;
+    villageName.innerHTML = "Resourcen Id: " + selectedResId + "<br>" + "Siedlungslevel: " + allRes[selectedResId].level;
 
 
-    if (allRes[curResId].open == true) {
-        htmlRes.innerHTML = allRes[curResId].color;
+    if (allRes[selectedResId].open == true) {
+        htmlRes.innerHTML = allRes[selectedResId].color;
     }else{
         htmlRes.innerHTML = "hidden";
     } 
@@ -187,8 +167,7 @@ function onPointerDown(e)
 
 
 function buildUp() {
-    allRes[curResId].level++;
-
+    allRes[selectedResId].level++;
 }
 
 
@@ -209,7 +188,7 @@ function onPointerMove(e)
     }
     mousePos.x =  getEventLocation(e).x;
     mousePos.y =  getEventLocation(e).y;
-
+    curResPos = worldToGrid(screenToWorld(mousePos));
 }
 
 function handleTouch(e, singleTouchHandler)
@@ -268,8 +247,6 @@ function adjustZoom(zoomAmount, zoomFactor)
 
         cameraOffset.x += (mousePos.x / cameraZoom) - (mousePos.x / (cameraZoom + zoomAmount));
         cameraOffset.y += (mousePos.y / cameraZoom) - (mousePos.y / (cameraZoom + zoomAmount));
-        
-        console.log(a,b)
     }
 }
 
