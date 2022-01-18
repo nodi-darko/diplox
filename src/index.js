@@ -16,24 +16,24 @@ let cameraZoom = 0.2;
 let MAX_ZOOM = 5;
 let MIN_ZOOM = 0.1;
 let SCROLL_SENSITIVITY = 0.0005;
-let fieldX = 30;
-let fieldY = 30;
+let field = {x: 30, y:30};
 let allRes = [];
-let selectedResId;
+let selectedResId = undefined;
+let capitalCityID = undefined;
 let curResPos = {x:0, y:0};
-let Bank = [0, 100, 100, 100, 100];
+let bank = [0, 100, 100, 100, 100];
 
 setTimeout(tacts,1000);
 
-for (let iy = 0; iy < fieldY; iy = iy +2){
-    for ( let ix = 0; ix < fieldX; ix = ix +2) {
+for (let iy = 0; iy < field.y; iy = iy +2){
+    for ( let ix = 0; ix < field.x; ix = ix +2) {
 
       let rIFR = randomIntFromRange(1,5);
 
-      addRes(nodeSize * ix          ,  nodeSize * iy            , iy*fieldX         + ix         , rIFR);
-      addRes(nodeSize * ix          ,  nodeSize * (iy + 1)      , iy*fieldX         + ix +1      , rIFR);
-      addRes(nodeSize * (ix + 1)    ,  nodeSize * iy            , (iy + 1) *fieldX  + ix         , rIFR);
-      addRes(nodeSize * (ix + 1)    ,  nodeSize * (iy + 1)      , (iy + 1) *fieldX  + ix +1      , rIFR);
+      addRes(nodeSize * ix          ,  nodeSize * iy            , iy*field.x         + ix         , rIFR);
+      addRes(nodeSize * ix          ,  nodeSize * (iy + 1)      , iy*field.x         + ix +1      , rIFR);
+      addRes(nodeSize * (ix + 1)    ,  nodeSize * iy            , (iy + 1) *field.x  + ix         , rIFR);
+      addRes(nodeSize * (ix + 1)    ,  nodeSize * (iy + 1)      , (iy + 1) *field.x  + ix +1      , rIFR);
 
     }
 }
@@ -48,9 +48,9 @@ function render()
     ctx.translate(cameraOffset.x, cameraOffset.y)
     //ctx.clearRect(0,0, window.innerWidth, window.innerHeight)
     	
-	for (let iy = 0; iy < fieldY; iy ++){
-		for (let ix = 0; ix < fieldX; ix ++) {
-            let id = iy*fieldX + ix;
+	for (let iy = 0; iy < field.y; iy ++){
+		for (let ix = 0; ix < field.x; ix ++) {
+            let id = iy*field.x + ix;
 
 
             if (allRes[id].open == false){
@@ -62,14 +62,29 @@ function render()
             
             drawRect(nodeSize * ix, nodeSize * iy, nodeSize + 2, nodeSize + 2);
 
-            ctx.fillStyle = "black";
+            if (id == capitalCityID){
+                ctx.fillStyle = "red";
+            }else{
+                ctx.fillStyle = "black";
+            }
             ctx.setLineDash([]);
             drawCircle(nodeSize * ix, nodeSize * iy, allRes[id].level * 10, 1, 1);
 
             ctx.setLineDash([4, 4]);
             drawCircle(nodeSize * ix, nodeSize * iy, 40, 0, 1);
+
+            if (allRes[id].level >= 3 && allRes[id].level <= 5) {
+                ctx.font = "50px Arial";
+                ctx.fillText("🏘️", nodeSize * ix - (allRes[id].level * 10), nodeSize * iy);
+            }else{
+                if (allRes[id].level >= 6) {
+                    ctx.font = "80px Arial";
+                    ctx.fillText("🏙️", nodeSize * ix - (allRes[id].level * 10), nodeSize * iy);    
+                }
+            }
 		}
 	}
+
     drawCircle(curResPos.x * nodeSize, curResPos.y * nodeSize, 20, 0, 1);
 
     requestAnimationFrame( render )
@@ -125,14 +140,14 @@ function worldToGrid(p) {
 }
 
 function gridToId(p) {
-    return p.y * fieldX + p.x;
+    return p.y * field.x + p.x;
 }
 
 function idToGrid(id) {
-    let xp =  Math.floor(id / fieldX);
-    return {x: xp, y: id - xp * fieldX};
+    let xp =  Math.floor(id / field.x);
+    return {x: xp, y: id - xp * field.x};
 }
-
+//If mouse is pressed down
 function onPointerDown(e)
 {
     isDragging = true
@@ -153,9 +168,6 @@ function onPointerDown(e)
     console.log(selectedResId, gridCoordinate,  allRes[selectedResId].color, worldCordinate.x);
 
     let htmlRes = document.getElementById("resItem");
-    let villageName = document.getElementById("village");
-    villageName.innerHTML = "Resourcen Id: " + selectedResId + "<br>" + "Siedlungslevel: " + allRes[selectedResId].level;
-
 
     if (allRes[selectedResId].open == true) {
         htmlRes.innerHTML = allRes[selectedResId].color;
@@ -166,11 +178,57 @@ function onPointerDown(e)
 
 
 
-function buildUp() {
-    allRes[selectedResId].level++;
+
+function buildVillage(){
+    let waterAmount = 30;
+    if(allRes[selectedResId].villageBank[3] - waterAmount >= 0 && allRes[selectedResId].level <= 9){
+        allRes[selectedResId].villageBank[3] -= waterAmount;
+        allRes[selectedResId].level++;
+    }else{
+        if (allRes[selectedResId].villageBank[3] - waterAmount >= 0) {
+            alert ("Die Stadt kann nicht noch größer werden")
+        }else{
+            alert ("Nicht genug Wasser")
+        }
+    }
+
 }
 
+function capCityMaker (){
+    if (selectedResId != undefined) {capitalCityID = selectedResId;}
+}
 
+function MoveResLinks() {
+    if (selectedResId != undefined) {
+        allRes[selectedResId].villageBank[2]--;
+        allRes[selectedResId-1].villageBank[2]++;
+        allRes[selectedResId].order.push( {from: selectedResId, to: selectedResId - 1, res: 2, anzahl: 1} )
+    }
+}
+
+function MoveResRechts() {
+    if (selectedResId != undefined) {
+        allRes[selectedResId].villageBank[2]--;
+        allRes[selectedResId+1].villageBank[2]++;
+
+    }
+}
+
+function MoveResUnten() {
+    if (selectedResId != undefined) {
+        allRes[selectedResId].villageBank[2]--;
+        allRes[selectedResId + canvas.width].villageBank[2]++;
+
+    }
+}
+
+function MoveResOben() {
+    if (selectedResId != undefined) {
+        allRes[selectedResId].villageBank[2]--;
+        allRes[selectedResId - canvas.width].villageBank[2]++;
+
+    }
+}
 
 function onPointerUp(e)
 {
@@ -181,14 +239,18 @@ function onPointerUp(e)
 
 function onPointerMove(e)
 {
-    if (isDragging)
+    if (isDragging && e && getEventLocation(e))
     {
         cameraOffset.x = getEventLocation(e).x/cameraZoom - dragStart.x
         cameraOffset.y = getEventLocation(e).y/cameraZoom - dragStart.y
     }
     mousePos.x =  getEventLocation(e).x;
     mousePos.y =  getEventLocation(e).y;
-    curResPos = worldToGrid(screenToWorld(mousePos));
+    let mouseWorldPos = screenToWorld(mousePos);
+    mouseWorldPos.x += nodeSize * 0.5;
+    mouseWorldPos.y += nodeSize * 0.5;
+
+    curResPos = worldToGrid(mouseWorldPos);
 }
 
 function handleTouch(e, singleTouchHandler)
@@ -257,7 +319,14 @@ canvas.addEventListener('touchend',  (e) => handleTouch(e, onPointerUp))
 canvas.addEventListener('mousemove', onPointerMove)
 canvas.addEventListener('touchmove', (e) => handleTouch(e, onPointerMove))
 canvas.addEventListener( 'wheel', (e) => adjustZoom(e.deltaY*SCROLL_SENSITIVITY))
-document.getElementById("btnBuildUp").addEventListener("click", buildUp);
+document.getElementById("btnBuildUp").addEventListener("click", buildVillage);
+document.getElementById("btnCapCity").addEventListener("click", capCityMaker);
+document.getElementById("btnMoveResLinks").addEventListener("click", MoveResLinks);
+document.getElementById("btnMoveResOben").addEventListener("click", MoveResOben);
+document.getElementById("btnMoveResRechts").addEventListener("click", MoveResRechts);
+document.getElementById("btnMoveResUnten").addEventListener("click", MoveResUnten);
+
+
 
 // Ready, set, go
 render()
@@ -274,20 +343,74 @@ function addRes(posX, posY, newId, t)
 
 function tacts()
 {
-   //console.log("HALLLO");
+   //console.log("HALLO");
    
-	for (let iy = 0; iy < fieldY; iy ++){
-		for (let ix = 0; ix < fieldX; ix ++) {
-            let id = iy*fieldX + ix;
+	for (let iy = 0; iy < field.y; iy ++){
+		for (let ix = 0; ix < field.x; ix ++) {
+            let id = iy*field.x + ix;
             let currentLevel = allRes[id].level
-            let currentType = allRes[id].type;
-            Bank[currentType] += currentLevel;
+            if (currentLevel >= 1) {
+                allRes[id].villageBank[2]--;
+                let currentType = allRes[id].type;
+                
+                allRes[id].villageBank[currentType] += currentLevel;
+                if (allRes[id - 1])           allRes[id].villageBank[allRes[id - 1].type]           += allRes[id].level;
+                if (allRes[id - field.x])     allRes[id].villageBank[allRes[id - field.x].type]     += allRes[id].level;
+                if (allRes[id - field.x -1])  allRes[id].villageBank[allRes[id - field.x -1].type]  += allRes[id].level;
+                
+                if(allRes[id].villageBank[2] <= 0 && allRes[id].level >= 1) {
+                    alert ("Siedlung zerstört");
+                    allRes[selectedResId].level--;
+                    allRes[id].villageBank[2] += 100;
+
+                }else{
+                    if (allRes[selectedResId].order.length >= 0) {
+                        for(let a = 0; a < allRes[selectedResId].order.length; a++){
+                            allRes[selectedResId].villageBank[allRes[selectedResId].order[a].res] -= allRes[selectedResId].order[a].anzahl;
+                            allRes[allRes[selectedResId].order[a].to].villageBank[allRes[selectedResId].order[a].res] += allRes[selectedResId].order[a].anzahl;
+                        }
+                    }
+                }
+
+                        
+                
+            }
+            if (currentLevel) {
+                let currentType = allRes[id].type;
+                bank[currentType] += currentLevel;
+                if(allRes[id - 1])  bank[allRes[id - 1].type]  += allRes[id].level;
+                if(allRes[id - field.x])  bank[allRes[id - field.x].type]  += allRes[id].level;
+                if(allRes[id - field.x -1])  bank[allRes[id - field.x -1].type]  += allRes[id].level;
+
+            }
         }
     }
-   document.getElementById("btnGold").innerHTML = "Gold (" + Bank[1] + ")";
-   document.getElementById("btnFutter").innerHTML = "Futter (" + Bank[2] + ")";
-   document.getElementById("btnWasser").innerHTML = "Wasser (" + Bank[3] + ")";
-   document.getElementById("btnLand").innerHTML = "Land (" + Bank[4] + ")";
-   // Gehe alle Siedlungen durch
-   setTimeout(tacts, 1000);
+
+
+
+
+    if(bank[2] <= 0) {
+        alert ("Game over");
+    }else{
+        // Gehe alle Siedlungen durch
+        setTimeout(tacts, 1000);
+    }
+
+    if (selectedResId != undefined) {
+        let villageName = document.getElementById("village");
+        villageName.innerHTML =  "Resourcen Id: "   + selectedResId                        + "<br>" + "Siedlungslevel: " + allRes[selectedResId].level;
+        villageName.innerHTML += "<br>" + "Futter:" + allRes[selectedResId].villageBank[2] + "<br>" + "Wasser:" + allRes[selectedResId].villageBank[3];
+        villageName.innerHTML += "<br>" + "Land:"   + allRes[selectedResId].villageBank[4] + "<br>" + "Gold:"   + allRes[selectedResId].villageBank[1];
+    }
+
+    if (capitalCityID != undefined) {
+        bank[1] = allRes[capitalCityID].villageBank[1];
+        bank[2] = allRes[capitalCityID].villageBank[2];
+        bank[3] = allRes[capitalCityID].villageBank[3];
+        bank[4] = allRes[capitalCityID].villageBank[4];
+    }
+    document.getElementById("btnGold").innerHTML   = "Gold   (" + bank[1] + ")";
+    document.getElementById("btnFutter").innerHTML = "Futter (" + bank[2] + ")";
+    document.getElementById("btnWasser").innerHTML = "Wasser (" + bank[3] + ")";
+    document.getElementById("btnLand").innerHTML   = "Land   (" + bank[4] + ")";
 }

@@ -14,6 +14,8 @@ export class Res {
         this.color = getColorFromNumber(t);
         this.open = true;
         this.level = 0;
+        this.villageBank = [0, 100, 100, 100, 100];
+        this.order = [];
     }
 
     // We will look at static and subclassed methods shortly
